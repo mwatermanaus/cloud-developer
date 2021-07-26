@@ -36,7 +36,39 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   app.get( "/", async ( req, res ) => {
     res.send("try GET /filteredimage?image_url={{}}")
   } );
-  
+
+  // Endpoint for filteredimage
+  // Tagkes in a url for the image and returns the filtered version using the precreated 
+  // util function to adjust colours and size.
+  app.get("/filteredimage", async (req, res) => {
+    let { image_url } = req.query;
+    let imageList = new Array;
+
+    if (!image_url){
+      // Return bad request if no image_url parameter is passed into the endpoint
+      res.status(400).send("Request is missing the image_url parameter.");
+    } else {
+      try {
+        // Read in the file from the URL and process with filter util
+        let image = await filterImageFromURL(image_url);
+        res.status(200).sendFile(image, (error) => {
+          if (error) {
+            console.log("Received error " + error);
+          } else {
+            imageList.push(image);
+            deleteLocalFiles(imageList);
+            console.log("Completed response and successfully deleted file." + image);
+          }
+        });
+        
+      } catch (error) {
+        // Return a 422 Unprocessible entity if the file errors on Jimp.read or filtering
+        console.log(error);
+        res.status(422).send("The image you passed in the request query returned an error.");
+      }
+      
+    }
+  } ); 
 
   // Start the Server
   app.listen( port, () => {
