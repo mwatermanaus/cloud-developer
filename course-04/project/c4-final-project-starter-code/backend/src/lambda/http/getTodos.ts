@@ -25,17 +25,12 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
 
   return  {
     statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true
-    },
     body: JSON.stringify({
       "items": todoList
     })
   }
 }
 )
-
 
 async function getTaskForUser(userId: string) {
   const result = await docClient.query({
@@ -50,8 +45,6 @@ async function getTaskForUser(userId: string) {
 
   return result.Items
 }
-
-
 
 
 handler

@@ -25,10 +25,10 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
   const newTodo: CreateTodoRequest = JSON.parse(event.body)
   const todoId = uuid.v4()
 
-  logger.info('Creating new item ' + newTodo.name)
+  logger.info('Creating new item ', {message: newTodo + ' creation started as id ' + todoId})
 
   const userId = getUserId(event)
-  logger.info('Creating new item - userId ' + userId)
+
 
   const todoItem:TodoItem = {
     userId: userId,
@@ -46,10 +46,6 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
 
   return {
     statusCode: 201,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true
-    },
     body: JSON.stringify(todoItem)
   }
 })

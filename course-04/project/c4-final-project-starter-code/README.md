@@ -1,3 +1,21 @@
+# Project Submission
+
+All references used were :
+Configuration layout for IAM per function
+  https://www.serverless.com/plugins/serverless-iam-roles-per-function
+
+DynamoDB update entry:
+Following the instructions layed out in the getting started documents:
+  https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.Js.03.html#GettingStarted.Js.03.03
+
+JWKSToken verfiction:
+Following the NPM package readme.
+  https://www.npmjs.com/package/jsonwebtoken
+
+Auth0 details:
+Following the example:
+  https://auth0.com/blog/navigating-rs256-and-jwks/#TL-DR-
+
 # Serverless TODO
 
 To implement this project, you need to implement a simple TODO application using AWS Lambda and Serverless framework. Search for all comments starting with the `TODO:` in the code to find the placeholders that you need to implement.

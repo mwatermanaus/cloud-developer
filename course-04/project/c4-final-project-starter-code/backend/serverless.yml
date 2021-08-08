@@ -20,7 +20,6 @@ provider:
     ATTACHMENTS_S3_BUCKET: todos-attachments-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
 
-
 functions:
 
   Auth:
@@ -34,6 +33,7 @@ functions:
           method: get
           path: todos
           cors: true
+          reqValidatorName: RequestBodyValidator
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -53,6 +53,7 @@ functions:
           method: post
           path: todos
           cors: true
+          reqValidatorName: RequestBodyValidator
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -69,13 +70,18 @@ functions:
           method: patch
           path: todos/{todoId}
           cors: true
-    iam:
-      role:
-        statements:
-          - Effect: Allow
-            Action:
-              - dynamodb: UpdateItem
-            Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE} 
+          reqValidatorName: RequestBodyValidator
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE} 
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
 
   # TODO: Configure this function
   DeleteTodo:
@@ -85,13 +91,19 @@ functions:
           method: delete
           path: todos/{todoId}
           cors: true
-    iam:
-      role:
-        statements:
-          - Effect: Allow
-            Action:
-              - dynamodb: UpdateItem
-            Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE} 
+          reqValidatorName: RequestBodyValidator
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE} 
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+
 
   # TODO: Configure this function
   GenerateUploadUrl:
@@ -101,12 +113,22 @@ functions:
           method: post
           path: todos/{todoId}/attachment
           cors: true
-          # reqValidatorName: RequestBodyValidator
-          # documentation:
-          #   summary: Create a new image
-          #   description: Create a new image
-          #   requestModels:
-          #     'application/json': ImageRequest
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new image
+            description: Create a new image
+            requestModels:
+              'application/json': ImageRequest
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_S3_BUCKET}/* 
 
 resources:
   Resources:
@@ -138,6 +160,15 @@ resources:
             Projection:
               ProjectionType: ALL
 
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
     AttachmentsBucket:
       Type: AWS::S3::Bucket
       Properties:
@@ -156,3 +187,17 @@ resources:
                 - DELETE
                 - HEAD
               MaxAge: 3000
+
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: MyPolicy
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENTS_S3_BUCKET}/*'
+        Bucket: !Ref AttachmentsBucket
