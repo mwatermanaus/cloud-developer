@@ -17,6 +17,16 @@ const indexTable = process.env.TODOS_CREATED_AT_INDEX
 export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   // TODO: Get all TODO items for a current user
   logger.info('Processing todo event', event)
+  
+  if (event.headers.Authorization.split(' ').length !== 2) {
+    return {
+      statusCode: 404,
+      body: JSON.stringify({
+        error: 'User is not logged on!'
+      })
+    }
+  }
+  
   const userId = getUserId(event)
 
   const todoList = await getTaskForUser(userId)

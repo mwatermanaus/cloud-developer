@@ -1,6 +1,5 @@
 import 'source-map-support/register'
 
-// import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as AWS  from 'aws-sdk'
 import * as middy from 'middy'
@@ -14,10 +13,10 @@ const docClient = new AWS.DynamoDB.DocumentClient()
 
 const logger = createLogger('updateTodos')
 const todosTable = process.env.TODOS_TABLE
-// const indexTable = process.env.TODOS_CREATED_AT_INDEX
+
 
 export const handler = middy (async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-//  const todoId = event.pathParameters.todoId
+
   const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
   const userId = getUserId(event)
   const todoId = event.pathParameters.todoId
@@ -39,7 +38,7 @@ export const handler = middy (async (event: APIGatewayProxyEvent): Promise<APIGa
   }).promise()
 
   return { statusCode: 200,
-  body: "Successfully updated!"}
+  body: ''}
 }
 )
 
