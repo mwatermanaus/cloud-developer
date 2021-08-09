@@ -6,13 +6,11 @@ import * as middy from 'middy'
 
 import { cors, httpErrorHandler } from 'middy/middlewares'
 import { getUserId } from '../utils'
+import { updateTodoUrl } from '../businessLogic/todoLogic'
 
-const docClient = new AWS.DynamoDB.DocumentClient()
 const s3 = new AWS.S3({
   signatureVersion: 'v4'
 })
-
-const todosTable = process.env.TODOS_TABLE
 
 const todoBucket = process.env.ATTACHMENTS_S3_BUCKET
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION
@@ -28,18 +26,7 @@ export const handler= middy(async (event: APIGatewayProxyEvent): Promise<APIGate
     Expires: urlExpiration
   })
 
-  await docClient.update({
-    TableName: todosTable,
-    Key: {
-      userId: userId,
-      todoId: todoId
-    },
-    UpdateExpression: 'set attachmentUrl = :attachmentUrl',
-    ExpressionAttributeValues: { 
-      ":attachmentUrl": `https://${todoBucket}.s3.amazonaws.com/${todoId}`
-      
-     }
-  }).promise()
+  await updateTodoUrl(todoId, userId) 
 
   return {    
     statusCode: 200,

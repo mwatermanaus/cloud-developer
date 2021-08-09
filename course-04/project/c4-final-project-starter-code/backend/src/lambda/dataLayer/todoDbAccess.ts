@@ -14,7 +14,8 @@ export class TodoDbAccess {
     constructor (
         private readonly docClient: DocumentClient = new AWS.DynamoDB.DocumentClient(),
         private readonly todosTable = process.env.TODOS_TABLE,
-        private readonly indexTable = process.env.TODOS_CREATED_AT_INDEX
+        private readonly indexTable = process.env.TODOS_CREATED_AT_INDEX,
+        private readonly todoBucket = process.env.ATTACHMENTS_S3_BUCKET
     ){}
 
     async getAllTodosForUser(userId: string): Promise<TodoItem[]> {
@@ -75,17 +76,21 @@ export class TodoDbAccess {
         return ''
     }
 
+    async updateTodoUrl(todoId: string, userId: string): Promise<string> {
+        await this.docClient.update({
+            TableName: this.todosTable,
+            Key: {
+              userId: userId,
+              todoId: todoId
+            },
+            UpdateExpression: 'set attachmentUrl = :attachmentUrl',
+            ExpressionAttributeValues: { 
+              ":attachmentUrl": `https://${this.todoBucket}.s3.amazonaws.com/${todoId}`
+              
+             }
+        }).promise()
+        
+        return ''
+    }
 }
 
-
-// function createDynamoDBClient() {
-//     if (process.env.IS_OFFLINE) {
-//       console.log('Creating a local DynamoDB instance')
-//     //   return new XAWS.DynamoDB.DocumentClient({
-//     //     region: 'localhost',
-//     //     endpoint: 'http://localhost:8000'
-//     //   })
-//     }
-  
-//     return new XAWS.DynamoDB.DocumentClient()
-// }

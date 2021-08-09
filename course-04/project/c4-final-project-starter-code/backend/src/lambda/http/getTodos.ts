@@ -6,7 +6,6 @@ import { createLogger } from '../../utils/logger'
 import * as middy from 'middy'
 
 import { cors, httpErrorHandler } from 'middy/middlewares'
-import { getUserId } from '../utils'
 
 import { getAllTodosForUser } from '../businessLogic/todoLogic'
 
@@ -25,8 +24,7 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
     }
   }
   
-  const userId = getUserId(event)
-  const todoList = await getAllTodosForUser(userId)
+  const todoList = await getAllTodosForUser(event)
 
   return  {
     statusCode: 200,
@@ -36,7 +34,6 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
   }
 }
 )
-
 
 handler
  .use(httpErrorHandler())
