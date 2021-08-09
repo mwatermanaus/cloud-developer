@@ -25,6 +25,12 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
   const newTodo: CreateTodoRequest = JSON.parse(event.body)
   const todoId = uuid.v4()
 
+  if (!newTodo.name){
+    return {
+      statusCode: 400,
+      body: 'No item name entered.'
+    } 
+  }
   logger.info('Creating new item ', {message: newTodo + ' creation started as id ' + todoId})
 
   const userId = getUserId(event)

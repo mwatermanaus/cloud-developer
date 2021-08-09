@@ -2,17 +2,15 @@ import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { createLogger } from '../../utils/logger'
-import * as AWS  from 'aws-sdk'
+// import * as AWS  from 'aws-sdk'
 import * as middy from 'middy'
 
 import { cors, httpErrorHandler } from 'middy/middlewares'
 import { getUserId } from '../utils'
 
-const logger = createLogger('getTodos')
-const docClient = new AWS.DynamoDB.DocumentClient()
+import { getAllTodosForUser } from '../businessLogic/todoLogic'
 
-const todosTable = process.env.TODOS_TABLE
-const indexTable = process.env.TODOS_CREATED_AT_INDEX
+const logger = createLogger('getTodos')
 
 export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   // TODO: Get all TODO items for a current user
@@ -28,10 +26,7 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
   }
   
   const userId = getUserId(event)
-
-  const todoList = await getTaskForUser(userId)
-
-  logger.info('Returned this list from DB todo event' + JSON.stringify(todoList))
+  const todoList = await getAllTodosForUser(userId)
 
   return  {
     statusCode: 200,
@@ -41,20 +36,6 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
   }
 }
 )
-
-async function getTaskForUser(userId: string) {
-  const result = await docClient.query({
-    TableName: todosTable,
-    IndexName: indexTable,
-    KeyConditionExpression: 'userId = :userId',
-    ExpressionAttributeValues: {
-      ':userId': userId
-    },
-    ScanIndexForward: false
-  }).promise()
-
-  return result.Items
-}
 
 
 handler
